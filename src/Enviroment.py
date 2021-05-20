@@ -7,8 +7,8 @@ import random
 from src.Obstacle import Obstacle
 from src.Robot import Robot
 from src.ObstaclesDeteccion import ObstaclesDeteccion
+from src.RRT import RRT
 
-import dubins
 
 class Enviroment(object):
 	"""docstring for Enviroment"""
@@ -18,16 +18,17 @@ class Enviroment(object):
 		self.width = width
 		self.height =height
 
-		self.delta = 50 #delta inicial, despues se ajusta
-
+		self.delta = 150 #delta inicial, despues se ajusta
+		self.ratio= 100
+		self.total_angle_options = 4
+		self.steps=1
+		self.length_sample= 200
 
 		self.robot = Robot(50,70,100,140,math.pi/2,tr,self.width,self.height)
 		with open("./src/obstacles/Anaqueles.json") as json_file:
 			temp = json.load(json_file)
 		self.obstacles =[Obstacle(obs,100,140,self.tr) for obs in temp]
-
-		self.free_points = self.create_free_points()
-
+		self.create_free_points(n=1000) #ajustable
 		self.deteccionObstacles = []
 		for i in range(self.tr.position_plane_total[0]):
 			temp = []
@@ -35,9 +36,25 @@ class Enviroment(object):
 				temp.append(ObstaclesDeteccion(self.tr))
 			self.deteccionObstacles.append(temp[:])
 
+		self.RRT = RRT(random.sample(self.free_points,self.length_sample),self.total_angle_options,self.ratio,self.steps,self.delta,self.tr) #ajustable
 
+		self.RRT.run(self.obstacles,self.robot.x,self.robot.y)
+		self.path = self.RRT.best_path(0,len(self.RRT.coords)-1)
+		self.reference_path = 0
+		self.total_path = len(self.path)
 
-
+		self.actual_path = []
+		
+		if self.path[self.reference_path][2] == False:
+			self.actual_path=self.RRT.paths[self.path[self.reference_path][1]]
+		else:
+			
+			self.actual_path=reversed(self.RRT.paths[self.path[self.reference_path][1]])
+		
+		self.reference_actual_dubins=0
+		self.total_actual_dubins=len(self.RRT.paths[self.path[self.reference_path][1]])
+		self.robot.actual_node =self.path[self.reference_path][0]
+		
 	def random_point(self):
 		return random.uniform(0,self.width),random.uniform(0,self.height)
 
@@ -48,13 +65,13 @@ class Enviroment(object):
 			self.free_points = []
 		for _ in range(n):
 			x_temp,y_temp = self.random_point()
-			self.free_points.append((x_temp,y_temp))
-
-	def maping(self):
-		theta_next = 0 #prioridad
-
-
-
+			var = False
+			for obs in self.obstacles:
+				var=obs.containsThePoint(x_temp,y_temp)
+				if var:
+					break
+			if var==False:
+				self.free_points.append((x_temp,y_temp))
 
 	#def path_is_free(self,path):
 
@@ -68,9 +85,35 @@ class Enviroment(object):
 		from pygame.draw import polygon
 		from shapely.geometry import Polygon
 
-
 		
-		self.update_obstacles_actual_coords()
+		if self.reference_actual_dubins!=self.total_actual_dubins:
+			self.robot.rotation_angles(self.actual_path[self.reference_actual_dubins][2])
+			self.robot.move_to(self.actual_path[self.reference_actual_dubins][0],self.actual_path[self.reference_actual_dubins][1])
+			self.reference_actual_dubins+=1
+		else:
+			self.reference_path +=1
+			if self.reference_path != self.total_path:
+				self.reference_actual_dubins=0
+				self.total_actual_dubins=len(self.RRT.paths[self.path[self.reference_path][1]])
+				self.robot.actual_node = self.path[self.reference_path][0]
+				if self.path[self.reference_path][2]==False:
+					self.actual_path=self.RRT.paths[self.path[self.reference_path][1]]
+				else:
+					self.actual_path=self.RRT.paths[self.path[self.reference_path][1]].reverse()
+			else:
+				self.path = self.RRT.best_path(self.robot.actual_node,random.randint(0,len(self.RRT.coords)))
+				self.reference_path = self.robot.actual_node
+				self.reference_actual_dubins=0
+				self.total_path = len(self.path)
+				self.actual_path = []
+				self.total_actual_dubins=len(self.RRT.paths[self.path[self.reference_path][1]])
+			
+				if self.path[self.reference_path][2] == False:
+					self.actual_path=self.RRT.paths[self.path[self.reference_path][1]]
+				else:
+					
+					self.actual_path=reversed(self.RRT.paths[self.path[self.reference_path][1]])
+		
 
 		for obstacle in self.obstacles:
 			temp = []
@@ -89,6 +132,7 @@ class Enviroment(object):
 		self.robot.plot_left(window)
 
 	def plot_right(self, window):
+		from pygame.draw import circle
 
 		if self.robot.stop_scan == False:
 			temp1,temp2 = self.robot.rotation_scan(self.obstacles)
@@ -96,6 +140,11 @@ class Enviroment(object):
 			self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].addLineExtended(temp2)
 		self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].plot(window)
 		self.robot.plot_right(window)
+
+		for c in self.RRT.coords_pĺot:
+			circle(window,"white",c,2 )
+		self.update_obstacles_actual_coords()
+		self.RRT.coords_pĺot = self.tr.array_to_actual_coords(self.RRT.coords_pĺot_help)
 
 
 

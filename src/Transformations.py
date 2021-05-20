@@ -34,9 +34,6 @@ class Transformations(object):
 			self.intervals_rectangles_corners.append(temp[:])
 
 
-
-
-
 		
 	# Transformaciones para Pygame
 
@@ -124,11 +121,11 @@ class Transformations(object):
 	def coords_to_plane_right(self,x,y):
 		return x+self.width/2, y
 
-	def alphalize_point_to_ref(self,x_ref,y_ref,x,y,alpha):
-		h = distance(x,y,x_ref,y_ref)
+	def deltalize_point_to_ref(self,x_ref,y_ref,x,y,delta):
+		h = self.distance(x,y,x_ref,y_ref)
 		x_temp,y_temp = x-x_ref , y-y_ref
-		p0,p1 = x_temp*alpha/h,y_temp*alpha/h
-		x_new,y_new = p0+x_ref,p1+x_ref
+		p0,p1 = x_temp*delta/h,y_temp*delta/h
+		x_new,y_new = p0+x_ref,p1+y_ref
 		return x_new,y_new
 
 

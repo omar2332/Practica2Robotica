@@ -21,4 +21,8 @@ class ObstaclesDeteccion(object):
 			for l in self.points_obstacles:
 				line(win,"green",l[0],l[1] )
 		for l in self.points_extended_obstacles:
-			line(win,"blue",l[0],l[1] )
+			try:
+				line(win,"blue",l[0],l[1] )
+			except Exception as e:
+				pass
+			

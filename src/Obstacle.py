@@ -6,7 +6,6 @@ class Obstacle(object):
 	def __init__(self,data,robotWidth,robotHeight,tr):
 		self.name= data['name']
 		self.corners = data['corners']
-		print(self.corners)
 		self.cornersPoly= Polygon(self.corners)
 		self.tr=tr
 		self.robotWidth = robotWidth
@@ -46,8 +45,15 @@ class Obstacle(object):
 		l1 = LineString( line)
 		return list(self.cornersPoly.intersection(l1).coords),list(self.extendedCornersPoly.intersection(l1).coords)
 
-
 	def update_actual_coords(self):
 		self.cornersPlot = self.tr.array_to_actual_coords(self.corners)
 		self.extendedCornersPlot = self.tr.array_to_actual_coords(self.extendedCorners)
+
+	def array_points_contains(self,points):
+		var = False
+		for p in points:
+			if self.containsThePoint(p[0],p[1]):
+				var=True
+				break
+		return var
 

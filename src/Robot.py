@@ -5,26 +5,30 @@ from src.Transformations import Transformations
 class Robot(object):
 	
 	def __init__(self,x,y,width,height,angle,tr,width_env, height_env):
+		"""
+		x,y : Punto inicial del robot
+		width,height : Medidas del robot
+		angle: Angulo inicial del robot
+		width_env, height_env: Variables del ambiente
+		tr: Para todas las transformaciones necesarias
 
-
-		self.tr= tr
+		"""
+		self.tr= tr #objeto para transformaciones
 
 		#variables de control
-		#x, y son el centro del robot
 		self.x = x
 		self.y = y
 		self.angle = angle
-
-		self.total_angle_options = 13
-		self.angle_options = [ (i*math.pi/6) for i in range(self.total_angle_options) ]
-		self.ratio_options = [ i for i in range(50,100)]
-		self.total_ratio_options = len(self.ratio_options)
-
-
-		self.x_plot,self.y_plot = self.tr.point_to_actual_coord(self.x,self.y)
-
+		#######################
 		self.width = width
 		self.height = height
+
+		######################################################################
+		# x,y estan dentro del plano original de la bodega, y x_plot e y_ploy se encuentran dentro del plano de pygame
+		# Esto es para que x,y se puedan trabajar dentro del algorimo si ser afectas o modificadas a la hora de pintar en pygame
+		self.x_plot,self.y_plot = self.tr.point_to_actual_coord(self.x,self.y)
+
+		#######################################################################
 
 		self.width_env = width_env
 		self.height_env = height_env
@@ -54,6 +58,7 @@ class Robot(object):
 		self.speed_scan = 10 #numero de saltos entre angulos
 		self.stop_scan = False
 
+		self.actual_node = 0
 
 
 
