@@ -18,17 +18,27 @@ class Enviroment(object):
 		self.width = width
 		self.height =height
 
-		self.delta = 150 #delta inicial, despues se ajusta
-		self.ratio= 100
-		self.total_angle_options = 4
+		self.delta = 70 #delta inicial, despues se ajusta
+		self.ratio= 20
 		self.steps=1
-		self.length_sample= 200
+		self.length_sample= 1000
+		
+
+		self.roots=[[50,70],[width-50,70],[width-50,height-70],[50,height-70]]
+		
+
 
 		self.robot = Robot(50,70,100,140,math.pi/2,tr,self.width,self.height)
 		with open("./src/obstacles/Anaqueles.json") as json_file:
 			temp = json.load(json_file)
 		self.obstacles =[Obstacle(obs,100,140,self.tr) for obs in temp]
-		self.create_free_points(n=1000) #ajustable
+
+		self.create_free_points(n=self.length_sample) #ajustable
+
+		if len(self.free_points)< int(0.5*self.length_sample):
+			self.create_free_points(n=int(self.length_sample/2),add=True) #ajustable
+
+
 		self.deteccionObstacles = []
 		for i in range(self.tr.position_plane_total[0]):
 			temp = []
@@ -36,27 +46,22 @@ class Enviroment(object):
 				temp.append(ObstaclesDeteccion(self.tr))
 			self.deteccionObstacles.append(temp[:])
 
-		self.RRT = RRT(random.sample(self.free_points,self.length_sample),self.total_angle_options,self.ratio,self.steps,self.delta,self.tr) #ajustable
+		self.RRT = RRT(self.free_points,self.ratio,self.steps,self.delta,self.tr) #ajustable
 
-		self.RRT.run(self.obstacles,self.robot.x,self.robot.y)
-		self.path = self.RRT.best_path(0,len(self.RRT.coords)-1)
-		self.reference_path = 0
-		self.total_path = len(self.path)
+		for c in self.roots:
+			self.RRT.init_trees(c[0],c[1])
 
-		self.actual_path = []
 		
-		if self.path[self.reference_path][2] == False:
-			self.actual_path=self.RRT.paths[self.path[self.reference_path][1]]
-		else:
-			
-			self.actual_path=reversed(self.RRT.paths[self.path[self.reference_path][1]])
-		
-		self.reference_actual_dubins=0
-		self.total_actual_dubins=len(self.RRT.paths[self.path[self.reference_path][1]])
-		self.robot.actual_node =self.path[self.reference_path][0]
+		self.RRT.run(self.obstacles)
+		self.RRT.conectedTree(self.obstacles)
+		self.RRT.update_coords()
+
+		self.index_points_paint = 0
+		self.index_lines_paint = 0
+
 		
 	def random_point(self):
-		return random.uniform(0,self.width),random.uniform(0,self.height)
+		return random.uniform(50,self.width-50),random.uniform(70,self.height-70)
 
 
 	def create_free_points(self, n=100,add = False):
@@ -73,8 +78,7 @@ class Enviroment(object):
 			if var==False:
 				self.free_points.append((x_temp,y_temp))
 
-	#def path_is_free(self,path):
-
+	
 	def update_obstacles_actual_coords(self):
 		if self.tr.position_plane_ant[1]!=self.tr.position_plane[1] or self.tr.position_plane_ant[0]!=self.tr.position_plane[0]:
 			for obstacle in self.obstacles:
@@ -84,37 +88,7 @@ class Enviroment(object):
 	def plot_left(self, window ,extended = False):
 		from pygame.draw import polygon
 		from shapely.geometry import Polygon
-
-		
-		if self.reference_actual_dubins!=self.total_actual_dubins:
-			self.robot.rotation_angles(self.actual_path[self.reference_actual_dubins][2])
-			self.robot.move_to(self.actual_path[self.reference_actual_dubins][0],self.actual_path[self.reference_actual_dubins][1])
-			self.reference_actual_dubins+=1
-		else:
-			self.reference_path +=1
-			if self.reference_path != self.total_path:
-				self.reference_actual_dubins=0
-				self.total_actual_dubins=len(self.RRT.paths[self.path[self.reference_path][1]])
-				self.robot.actual_node = self.path[self.reference_path][0]
-				if self.path[self.reference_path][2]==False:
-					self.actual_path=self.RRT.paths[self.path[self.reference_path][1]]
-				else:
-					self.actual_path=self.RRT.paths[self.path[self.reference_path][1]].reverse()
-			else:
-				self.path = self.RRT.best_path(self.robot.actual_node,random.randint(0,len(self.RRT.coords)))
-				self.reference_path = self.robot.actual_node
-				self.reference_actual_dubins=0
-				self.total_path = len(self.path)
-				self.actual_path = []
-				self.total_actual_dubins=len(self.RRT.paths[self.path[self.reference_path][1]])
-			
-				if self.path[self.reference_path][2] == False:
-					self.actual_path=self.RRT.paths[self.path[self.reference_path][1]]
-				else:
-					
-					self.actual_path=reversed(self.RRT.paths[self.path[self.reference_path][1]])
-		
-
+	
 		for obstacle in self.obstacles:
 			temp = []
 
@@ -129,10 +103,10 @@ class Enviroment(object):
 				polygon(window,"green",obstacle.cornersPlot)
 		
 		#robot
-		self.robot.plot_left(window)
+		self.robot.plot_left(window,bg=True)
 
-	def plot_right(self, window):
-		from pygame.draw import circle
+	def plot_right(self, window, Tree_steps=True):
+		from pygame.draw import circle,line
 
 		if self.robot.stop_scan == False:
 			temp1,temp2 = self.robot.rotation_scan(self.obstacles)
@@ -141,10 +115,37 @@ class Enviroment(object):
 		self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].plot(window)
 		self.robot.plot_right(window)
 
-		for c in self.RRT.coords_pĺot:
-			circle(window,"white",c,2 )
+		if Tree_steps:
+			if self.index_points_paint != len(self.RRT.coords_pĺot):
+				self.index_points_paint+=1
+			if self.index_lines_paint != len(self.RRT.coords_pĺot_pairs):
+				self.index_lines_paint+=1
+
+
+
+			for c in range(self.index_points_paint):
+				circle(window,"white",self.RRT.coords_pĺot[c],2)
+			for c in range(self.index_lines_paint):
+				line(window,"yellow",self.RRT.coords_pĺot_pairs[c-1][0],self.RRT.coords_pĺot_pairs[c-1][1])
+		else:
+			for c in range(len(self.RRT.coords_pĺot)):
+				circle(window,"white",self.RRT.coords_pĺot[c],2 )
+			for c in range(len(self.RRT.coords_pĺot_pairs)):
+				line(window,"yellow",self.RRT.coords_pĺot_pairs[c-1][0],self.RRT.coords_pĺot_pairs[c-1][1])
+
+
 		self.update_obstacles_actual_coords()
 		self.RRT.coords_pĺot = self.tr.array_to_actual_coords(self.RRT.coords_pĺot_help)
+		self.RRT.coords_pĺot_pairs = self.tr.array_lines_to_actual_coords(self.RRT.coords_pĺot_help_pair)
+
+	def change_cam(self,cam_auto):
+		self.robot.cam_auto = cam_auto
+
+	def change_plane(self,plane):
+		if not self.robot.cam_auto:
+			self.tr.position_plane_ant = self.tr.position_plane[:]
+			self.tr.position_plane = plane
+
 
 
 

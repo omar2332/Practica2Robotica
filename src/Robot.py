@@ -19,6 +19,7 @@ class Robot(object):
 		self.x = x
 		self.y = y
 		self.angle = angle
+		self.cam_auto = True 
 		#######################
 		self.width = width
 		self.height = height
@@ -59,6 +60,7 @@ class Robot(object):
 		self.stop_scan = False
 
 		self.actual_node = 0
+		self.color = "red"
 
 
 
@@ -95,6 +97,7 @@ class Robot(object):
 		else:
 			self.theta_scan+=ref
 		self.x_scan,self.y_scan =self.tr.point_rotation_to_angles(self.theta_scan,self.x,self.y,self.distance_scan)
+		
 		self.x_scan_plot,self.y_scan_plot = self.tr.point_to_actual_coord(self.x_scan,self.y_scan)
 
 		for obs in obstacles:
@@ -106,23 +109,27 @@ class Robot(object):
 
 
 
-	def plot_left(self,win):
-		from pygame.draw import line,circle
-		for i in range(len(self.corners_plot)-1):
-			line(win,"red",(self.corners_plot[i][0],self.corners_plot[i][1]),(self.corners_plot[i+1][0],self.corners_plot[i+1][1]))
-		line(win,"red",(self.corners_plot[-1][0],self.corners_plot[-1][1]),(self.corners_plot[0][0],self.corners_plot[0][1]))
+	def plot_left(self,win,bg=False):
+		from pygame.draw import line,circle,polygon
+		if bg:
+			polygon(win,self.color,self.corners_plot)
+		else:
+			for i in range(len(self.corners_plot)-1):
+				line(win,self.color,(self.corners_plot[i][0],self.corners_plot[i][1]),(self.corners_plot[i+1][0],self.corners_plot[i+1][1]))
+			line(win,self.color,(self.corners_plot[-1][0],self.corners_plot[-1][1]),(self.corners_plot[0][0],self.corners_plot[0][1]))
 		
-		x_temp1,x_temp2 = self.tr.inverse_plane(self.x_plot,self.y_plot)
-		circle(win,"red",(x_temp1,x_temp2),3 )
+			x_temp1,x_temp2 = self.tr.inverse_plane(self.x_plot,self.y_plot)
+			circle(win,self.color,(x_temp1,x_temp2),3 )
 
 	def plot_right(self,win):
 		from pygame.draw import circle,line
-		x_temp1,y_temp1 = self.tr.inverse_plane(self.x_plot,self.y_plot)
-		x_temp2,y_temp2 = self.tr.inverse_plane(self.x_scan_plot,self.y_scan_plot)
+		if self.cam_auto:
+			x_temp1,y_temp1 = self.tr.inverse_plane(self.x_plot,self.y_plot)
+			x_temp2,y_temp2 = self.tr.inverse_plane(self.x_scan_plot,self.y_scan_plot)
 
 
-		line(win,"red",(x_temp1,y_temp1),(x_temp2,y_temp2))
-		circle(win,"red",(x_temp1,y_temp1),3)
+			line(win,self.color,(x_temp1,y_temp1),(x_temp2,y_temp2))
+			circle(win,self.color,(x_temp1,y_temp1),3)
 
 
 
@@ -130,17 +137,18 @@ class Robot(object):
 		if x<self.width_env and y<self.height_env and x>=0 and y>=0:
 			self.x=x
 			self.y=y
-			self.x_plot,self.y_plot = self.tr.point_to_actual_coord(self.x,self.y)
-			
-			for i in range(self.tr.position_plane_total[0]):
-				for j in range(self.tr.position_plane_total[1]):
-					point = Point((x,y))
-					poly = Polygon(self.tr.intervals_rectangles_corners[i][j])
-					if poly.contains(point):
-						self.tr.position_plane_ant = self.tr.position_plane[:]
-						self.tr.position_plane = (i,j)
-						
-						break
+
+			#Auto
+			if self.cam_auto:
+				self.x_plot,self.y_plot = self.tr.point_to_actual_coord(self.x,self.y)
+				for i in range(self.tr.position_plane_total[0]):
+					for j in range(self.tr.position_plane_total[1]):
+						point = Point((x,y))
+						poly = Polygon(self.tr.intervals_rectangles_corners[i][j])
+						if poly.contains(point):
+							self.tr.position_plane_ant = self.tr.position_plane[:]
+							self.tr.position_plane = (i,j)
+							break
 
 	def colision_point(obstacle):
 		point = Point((self.x,self.y))

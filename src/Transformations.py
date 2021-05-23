@@ -34,10 +34,16 @@ class Transformations(object):
 			self.intervals_rectangles_corners.append(temp[:])
 
 
-		
+	def is_intersection_lines(self,line1,line2):
+		from shapely.geometry import LineString
+		l1 = LineString(line1)
+		l2 = LineString(line2)
+
+		return l1.intersects(l2)
 	# Transformaciones para Pygame
 
-
+	def point_contains_into_env(x,y):
+		print()
 	def point_angle_and_distance(self,x,y,theta,distance):
 		x_temp = x+math.cos(theta)*distance
 		y_temp = y+math.sin(theta)*distance
@@ -51,7 +57,7 @@ class Transformations(object):
 		distance1 = self.distance(p1[0],p1[1],x,y)
 		distance2 = self.distance(p2[0],p2[1],x,y)
 		temp = self.product_point(x_temp1,y_temp1,x_temp2,y_temp2)
-		theta = math.acos(  temp/(distance1*distance2) )
+		theta = math.acos( temp/(distance1*distance2) )
 		return theta
 
 	def point_rotation_to_angles(self,theta,x_center,y_center,distance):
@@ -80,6 +86,16 @@ class Transformations(object):
 		for data in array:
 			x,y =self.inverse_plane(data[0],data[1])
 			temp.append( (x,y)  )
+		return temp
+
+	def inverse_plane_array_lines(self,lines):
+		temp= []
+		for l in lines:
+			temp2=[]
+			for data in l:
+				x,y =self.inverse_plane(data[0],data[1])
+				temp2.append( (x,y)  )
+			temp.append(temp2[:])
 		return temp
 
 
@@ -114,13 +130,26 @@ class Transformations(object):
 			new_array.append((x_new,y_new))
 
 		return self.inverse_plane_array(new_array)
+
+	def array_lines_to_actual_coords(self, array):
+		new_array = []
+		for l in array:
+			temp=[]
+			for coords in l:
+				x_new,y_new = self.p1_camera_traslations_horizontal(coords[0],coords[1])
+				x_new,y_new = self.p1_camera_traslations_vertical(x_new,y_new)
+				temp.append((x_new,y_new))
+			new_array.append(temp[:])
+
+		return self.inverse_plane_array_lines(new_array)
+
+
 	def point_to_actual_coord(self,x,y):
 		x_new,y_new = self.p1_camera_traslations_horizontal(x,y)
 		x_new,y_new = self.p1_camera_traslations_vertical(x_new,y_new)
 		return x_new,y_new
 	def coords_to_plane_right(self,x,y):
 		return x+self.width/2, y
-
 	def deltalize_point_to_ref(self,x_ref,y_ref,x,y,delta):
 		h = self.distance(x,y,x_ref,y_ref)
 		x_temp,y_temp = x-x_ref , y-y_ref

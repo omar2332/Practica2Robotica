@@ -10,7 +10,7 @@ class Obstacle(object):
 		self.tr=tr
 		self.robotWidth = robotWidth
 		self.robotHeight = robotHeight
-		self.minimun_side = min(self.robotWidth/2,self.robotHeight/2)
+		self.minimun_side = min(self.robotWidth/2,self.robotHeight/2) 5
 		self.extendedCorners = self.generateExtendedCorners()
 		self.extendedCornersPoly = Polygon(self.extendedCorners)
 		self.cornersPlot = self.tr.array_to_actual_coords(self.corners)
@@ -37,7 +37,7 @@ class Obstacle(object):
 
 	def containsTheLine(self,line):
 		from shapely.geometry import LineString
-		l1 = LineString( line)
+		l1 = LineString(line)
 		return self.extendedCornersPoly.intersects(l1)
 
 	def intersectionTheLine(self,line):
@@ -55,5 +55,4 @@ class Obstacle(object):
 			if self.containsThePoint(p[0],p[1]):
 				var=True
 				break
-		return var
-
+		return var 

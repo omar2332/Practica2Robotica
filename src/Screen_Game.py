@@ -19,7 +19,7 @@ class Screen(object):
 		self.height=height
 		self.fps =fps
 		self.run = True #controla el bucle de pygame
-
+		self.cam_auto = True
 
 		#vars for optimizacion(ignore)
 		half_width = self.width/2
@@ -33,6 +33,8 @@ class Screen(object):
 		# se divide el plano del ambiente segun la mitad de la pantalla de pygame definida
 		position_plane_total = ( int(self.width_env/(half_width)), int(self.height_env/self.height) ) 
 		position_plane = (0,0) #Plano inicial
+		plane_i=0
+		plane_j=0
 		
 		
 		############################################################################################################################
@@ -59,11 +61,11 @@ class Screen(object):
 		
 		while self.run:
 			clock.tick(self.fps) #control de fps
+						
+
 			self.env.plot_left(sub1,extended=True) # Pinta el ambiente del lado izquierdo
-			self.env.plot_right(sub2) #Pinta el ambiente del lado derecho
-			pygame.draw.line( self.win,"white",(half_width,0),(half_width,self.height) ) #linea que divide las dos pantallas
-			
-			
+			self.env.plot_right(sub2,Tree_steps=False) #Pinta el ambiente del lado derecho
+			pygame.draw.line(self.win,"white",(half_width,0),(half_width,self.height) ) #linea que divide las dos pantallas
 			
 
 			#######################################################################################################
@@ -79,4 +81,38 @@ class Screen(object):
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					self.run = False
+				if event.type == pygame.KEYDOWN:
+					
+					if event.key == pygame.K_SPACE:
+						position_plane = (0,0) #Plano inicial
+						plane_i=0
+						plane_j=0
+						self.cam_auto = not self.cam_auto
+						if self.cam_auto:
+							print("auto")
+						else:
+							print("manual")
+						self.env.change_cam(self.cam_auto)
+					if event.key == pygame.K_UP:
+						if plane_j+1 <position_plane_total[1]:
+							plane_j+=1
+							position_plane = (plane_i,plane_j)
+							self.env.change_plane(position_plane)
+					if event.key == pygame.K_DOWN:
+						if plane_j-1 >=0:
+							plane_j-=1
+							position_plane = (plane_i,plane_j)
+							self.env.change_plane(position_plane)
+
+					if event.key == pygame.K_RIGHT:
+						if plane_i+1 <position_plane_total[0]:
+							plane_i+=1
+							position_plane = (plane_i,plane_j)
+							self.env.change_plane(position_plane)
+					if event.key == pygame.K_LEFT:
+						if plane_i-1 >=0:
+							plane_i-=1
+							position_plane = (plane_i,plane_j)
+							self.env.change_plane(position_plane)
+						
 			

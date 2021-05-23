@@ -2,6 +2,7 @@ from src import Screen_Game
 def main():
 
 	FPS = 30
+	
 	#para pantallas de 1080x1920
 
 	WIDTH=875*2
