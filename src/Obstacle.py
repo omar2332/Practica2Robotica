@@ -10,7 +10,7 @@ class Obstacle(object):
 		self.tr=tr
 		self.robotWidth = robotWidth
 		self.robotHeight = robotHeight
-		self.minimun_side = min(self.robotWidth/2,self.robotHeight/2) 5
+		self.minimun_side = min(self.robotWidth/2,self.robotHeight/2)
 		self.extendedCorners = self.generateExtendedCorners()
 		self.extendedCornersPoly = Polygon(self.extendedCorners)
 		self.cornersPlot = self.tr.array_to_actual_coords(self.corners)

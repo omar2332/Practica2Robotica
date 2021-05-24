@@ -21,7 +21,7 @@ class Enviroment(object):
 		self.delta = 70 #delta inicial, despues se ajusta
 		self.ratio= 20
 		self.steps=1
-		self.length_sample= 1000
+		self.length_sample= 10000
 		
 
 		self.roots=[[50,70],[width-50,70],[width-50,height-70],[50,height-70]]
@@ -55,6 +55,7 @@ class Enviroment(object):
 		self.RRT.run(self.obstacles)
 		self.RRT.conectedTree(self.obstacles)
 		self.RRT.update_coords()
+
 
 		self.index_points_paint = 0
 		self.index_lines_paint = 0
@@ -103,17 +104,10 @@ class Enviroment(object):
 				polygon(window,"green",obstacle.cornersPlot)
 		
 		#robot
-		self.robot.plot_left(window,bg=True)
+		self.robot.plot_left(window,bg=False)
 
 	def plot_right(self, window, Tree_steps=True):
 		from pygame.draw import circle,line
-
-		if self.robot.stop_scan == False:
-			temp1,temp2 = self.robot.rotation_scan(self.obstacles)
-			self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].addLine(temp1)
-			self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].addLineExtended(temp2)
-		self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].plot(window)
-		self.robot.plot_right(window)
 
 		if Tree_steps:
 			if self.index_points_paint != len(self.RRT.coords_pĺot):
@@ -132,6 +126,14 @@ class Enviroment(object):
 				circle(window,"white",self.RRT.coords_pĺot[c],2 )
 			for c in range(len(self.RRT.coords_pĺot_pairs)):
 				line(window,"yellow",self.RRT.coords_pĺot_pairs[c-1][0],self.RRT.coords_pĺot_pairs[c-1][1])
+
+		
+		if self.robot.stop_scan == False:
+			temp1,temp2 = self.robot.rotation_scan(self.obstacles)
+			self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].addLine(temp1)
+			self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].addLineExtended(temp2)
+		self.deteccionObstacles[self.tr.position_plane[0]][self.tr.position_plane[1]].plot(window)
+		self.robot.plot_right(window)
 
 
 		self.update_obstacles_actual_coords()

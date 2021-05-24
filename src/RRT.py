@@ -99,8 +99,8 @@ class RRT(object):
 
 			j = self.nearest_node(new_x,new_y)
 
-			if i!=j:
-				i=j
+			#if i!=j:
+			#	i=j
 
 			"""
 			
@@ -140,13 +140,6 @@ class RRT(object):
 				self.reference +=1
 
 		#print(self.nodes_refs)
-
-					
-		
-	
-		
-		
-
 
 	def lineIsFree(self,obstacles,x1,y1,x2,y2):
 		line = [(x1,y1),(x2,y2)]
@@ -189,6 +182,7 @@ class RRT(object):
 	def update_coords(self):
 		self.coords_pĺot = self.tr.array_to_actual_coords(self.coords_pĺot_help)
 		self.coords_pĺot_pairs = self.tr.array_lines_to_actual_coords(self.coords_pĺot_help_pair)
+		print(len(self.coords_pĺot))
 
 
 

@@ -38,7 +38,7 @@ class Screen(object):
 		
 		
 		############################################################################################################################
-		#objetos
+		# objetos
 		############################################################################################################################
 		#Variable muy importa, realiza distintas operaciones que se repiten de manera constante a travez de todas demas clases
 		tr = Transformations(self.width,self.height,position_plane,position_plane_total,self.width_env, self.height_env)
@@ -63,7 +63,7 @@ class Screen(object):
 			clock.tick(self.fps) #control de fps
 						
 
-			self.env.plot_left(sub1,extended=True) # Pinta el ambiente del lado izquierdo
+			self.env.plot_left(sub1,extended=False) # Pinta el ambiente del lado izquierdo
 			self.env.plot_right(sub2,Tree_steps=False) #Pinta el ambiente del lado derecho
 			pygame.draw.line(self.win,"white",(half_width,0),(half_width,self.height) ) #linea que divide las dos pantallas
 			
