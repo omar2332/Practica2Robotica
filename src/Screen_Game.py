@@ -63,8 +63,8 @@ class Screen(object):
 			clock.tick(self.fps) #control de fps
 						
 
-			self.env.plot_left(sub1,extended=False) # Pinta el ambiente del lado izquierdo
-			self.env.plot_right(sub2,Tree_steps=False) #Pinta el ambiente del lado derecho
+			self.env.plot_left(sub1) # Pinta el ambiente del lado izquierdo
+			self.env.plot_right(sub2) #Pinta el ambiente del lado derecho
 			pygame.draw.line(self.win,"white",(half_width,0),(half_width,self.height) ) #linea que divide las dos pantallas
 			
 
