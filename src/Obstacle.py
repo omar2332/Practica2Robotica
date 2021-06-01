@@ -51,10 +51,13 @@ class Obstacle(object):
 		point = Point((x,y))
 		return self.extendedCornersPoly.contains(point)
 
-	def containsTheLine(self,line):
+	def containsTheLine(self,line,extended =False):
 		from shapely.geometry import LineString
 		l1 = LineString(line)
-		return self.cornersPoly.intersects(l1)
+		if not extended:
+			return self.cornersPoly.intersects(l1)
+		else:
+			return self.extendedCornersPoly.intersects(l1)
 
 	def intersectionTheLine(self,line):
 		from shapely.geometry import LineString
@@ -101,11 +104,11 @@ class Obstacle(object):
 		for coords in self.corners:
 			vector = ( coords[0] - center[0] , coords[1]-center[1] )
 			if vector[0]<0 and vector[1]<0:
-				extendedCorners.append((coords[0] - self.maximun_side, coords[1]-self.maximun_side))
+				extendedCorners.append((coords[0] - self.maximun_side-2, coords[1]-self.maximun_side-2))
 			if vector[0]>0 and vector[1]>0:
-				extendedCorners.append((coords[0] + self.maximun_side, coords[1]+self.maximun_side))
+				extendedCorners.append((coords[0] + self.maximun_side+2, coords[1]+self.maximun_side+2))
 			if vector[0]<0 and vector[1]>0:
-				extendedCorners.append((coords[0] - self.maximun_side, coords[1]+self.maximun_side))
+				extendedCorners.append((coords[0] - self.maximun_side-2, coords[1]+self.maximun_side+2))
 			if vector[0]>0 and vector[1]<0:
-				extendedCorners.append((coords[0] + self.maximun_side, coords[1]-self.maximun_side))
+				extendedCorners.append((coords[0] + self.maximun_side+2, coords[1]-self.maximun_side-2))
 		return extendedCorners

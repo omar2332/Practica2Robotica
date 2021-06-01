@@ -9,6 +9,7 @@ from src.Obstacle import Obstacle
 from src.Robot import Robot
 from src.ObstaclesDeteccion import ObstaclesDeteccion
 from src.RRT import RRT
+from src.space3D import space3D
 
 
 class Enviroment(object):
@@ -20,19 +21,23 @@ class Enviroment(object):
 		self.width = width
 		self.height =height
 
-		self.delta = 120 #delta inicial, despues se ajusta
-		self.length_sample= 5000
+		self.delta = 150 #delta inicial, despues se ajusta
+		self.length_sample= 9000
 		
 
 		self.roots=[[50,70],[width-50,70],[width-50,height-70],[50,height-70]]
-		
+
+
+		#opciones
 		self.animated_CE = False # Para la animacion del espacio de configuracion.
-		self.generate_CE = False	# Para generar el espacio de configuracion o solo cargarlo
 		self.animate_Tree = False
+
+		#Van de la mano
 		self.start_path = True
 		self.animate_robot=True
 
 
+		self.generate_CE = False	# Para generar el espacio de configuracion o solo cargarlo
 
 		self.robot = Robot(50,70,100,140,math.pi/2,tr,self.width,self.height)
 		self.obstacles=self.load_obstacles()
@@ -55,6 +60,7 @@ class Enviroment(object):
 			self.total_actual_points = len(self.obstacles[self.index_obstacle].coords_3D[self.index_points])
 
 
+		
 		self.create_free_points(n=self.length_sample) #ajustable
 
 		
@@ -65,7 +71,6 @@ class Enviroment(object):
 		random.shuffle(self.points_free_obstacles_sample)
 		self.rrt = RRT(self.free_points,self.delta,self.tr)
 		self.node_entrace =self.rrt.add_node_tree(50,70,math.pi/2)-1
-
 		self.rrt.run(self.obstacles)
 
 		self.node_obstacles_ref_start = self.rrt.reference-1
@@ -77,9 +82,7 @@ class Enviroment(object):
 		self.node_exit =self.rrt.add_node_tree(3430,1610,0)-1
 		self.rrt.save_Tree_Coords()
 		self.rrt.update_coords()
-
-		print(self.node_obstacles_ref_start)
-		print(self.node_obstacles_ref_end)
+	
 
 		if self.start_path:
 			self.start_path_robot()
@@ -99,6 +102,9 @@ class Enviroment(object):
 				temp.append(ObstaclesDeteccion(self.tr))
 			self.deteccionObstacles.append(temp[:])
 
+		self.space3D = space3D(self.obstacles,self.rrt.coords,self.rrt.pairs)
+		self.space3D.plot_config_space_and_tree()
+
 
 	def start_path_robot(self,returned = False):
 		if not returned:
@@ -108,11 +114,10 @@ class Enviroment(object):
 				node_end = self.node_entrace
 			else:
 				node_end = self.node_exit
-		print(self.robot.actual_node)
-		print(node_end)
+
 		path_nodes = self.rrt.best_path(self.robot.actual_node,node_end)
 		pairs = []
-		print(path_nodes)
+		
 
 		for i in range(len(path_nodes)-1):
 			pairs.append( (path_nodes[i],path_nodes[i+1]))

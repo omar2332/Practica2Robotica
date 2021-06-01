@@ -87,9 +87,6 @@ class RRT(object):
 
 
 	def add_node_tree(self,x,y,angle):
-
-		self.coords.append((x,y,angle))
-		self.coords_pĺot_help.append((x,y))
 		self.Tree.add_node(self.reference)
 		if self.reference !=0:
 			i = self.nearest_node(x,y,angle)
@@ -98,6 +95,8 @@ class RRT(object):
 			self.Tree.add_edge(i, self.reference, weight=distance)
 			self.pairs.append((i, self.reference))
 
+		self.coords.append((x,y,angle))
+		self.coords_pĺot_help.append((x,y))
 		self.reference +=1
 		return self.reference
 
@@ -105,9 +104,14 @@ class RRT(object):
 	def append_Tree(self,sample,obstacles):
 		re_sample = []
 		for coord in tqdm.tqdm(sample):
+			var = True
 			i = self.nearest_node(coord[0],coord[1],coord[2])
 			distance = self.tr.distance3D(coord[0],coord[1],coord[2],self.coords[i][0],self.coords[i][1],self.coords[i][2])	
-			if not self.lineIsFree(obstacles,coord[0],coord[1],self.coords[i][0],self.coords[i][1]) and distance<=self.delta and math.fabs(coord[2]-self.coords[i][2]) <= math.pi/2 :
+			if  math.fabs(coord[2]-self.coords[i][2])> math.pi/2:
+				var = False
+
+
+			if not self.lineIsFree(obstacles,coord[0],coord[1],self.coords[i][0],self.coords[i][1]) and distance<=self.delta and math.fabs(coord[2]-self.coords[i][2]) <= math.pi/2 and var:
 				self.Tree.add_node(self.reference)
 				self.coords.append((coord[0],coord[1],coord[2]))
 				self.coords_pĺot_help.append((coord[0],coord[1]))
@@ -118,7 +122,7 @@ class RRT(object):
 			else:
 				re_sample.append(coord)
 
-		if len(re_sample)>=6000:
+		if len(re_sample)>=7500:
 			self.append_Tree(re_sample,obstacles)
 
 	def run(self,obstacles):
@@ -131,8 +135,8 @@ class RRT(object):
 			new_x,new_y,alpha = self.tr.deltalize_point_to_ref(self.coords[i][0],self.coords[i][1],self.coords[i][2],s[0],s[1],s[2],self.delta)
 
 
-			nearest_obstacle = None
-			distance_obstacle = 20000
+			#nearest_obstacle = None
+			#distance_obstacle = 20000
 			var = False
 
 			for obs in obstacles:
@@ -167,12 +171,25 @@ class RRT(object):
 					alpha+=math.pi
 				else:
 					alpha-=math.pi
-			
 
+
+			
+			if math.fabs(alpha-math.pi) < math.radians(5):
+				alpha = math.pi
+			if math.fabs(alpha-math.pi/2) < math.radians(5):
+				alpha = math.pi/2
+			if math.fabs(alpha-2*math.pi/3) < math.radians(5):
+				alpha = 2*math.pi/3
+
+			if math.fabs(alpha)< math.radians(5):
+				alpha= 0
+
+			if math.fabs(alpha-self.coords[i][2])>math.pi/2:
+				var = True
 
 			distance = self.tr.distance3D(new_x,new_y,alpha,self.coords[i][0],self.coords[i][1],self.coords[i][2])
 			
-			if not self.lineIsFree(obstacles,new_x,new_y,self.coords[i][0],self.coords[i][1]) and new_x>=50 and new_y>=70 and new_x<=self.width_env-50 and new_y<=self.height_env-70 and not var and math.fabs(distance-self.delta)<=5:
+			if not self.lineIsFree(obstacles,new_x,new_y,self.coords[i][0],self.coords[i][1],extended=True) and new_x>=50 and new_y>=70 and new_x<=self.width_env-50 and new_y<=self.height_env-70 and not var and math.fabs(distance-self.delta)<=5:
 				self.Tree.add_node(self.reference)
 				self.coords.append((new_x,new_y,alpha))
 				self.coords_pĺot_help.append((new_x,new_y))
@@ -184,11 +201,11 @@ class RRT(object):
 		
 
 
-	def lineIsFree(self,obstacles,x1,y1,x2,y2):
+	def lineIsFree(self,obstacles,x1,y1,x2,y2,extended=False):
 		line = [(x1,y1),(x2,y2)]
 		var = False
 		for obs in obstacles:
-			if obs.containsTheLine(line):
+			if obs.containsTheLine(line,extended=extended):
 				var=True
 				break
 		return var
@@ -203,6 +220,7 @@ class RRT(object):
 
 	def best_path(self,node_start,node_end):
 		path = nx.dijkstra_path(self.Tree,node_start,node_end)
+		print(path)
 		return path
 		
 
