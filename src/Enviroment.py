@@ -103,7 +103,11 @@ class Enviroment(object):
 			self.deteccionObstacles.append(temp[:])
 
 		self.space3D = space3D(self.obstacles,self.rrt.coords,self.rrt.pairs)
-		self.space3D.plot_config_space_and_tree()
+
+		if self.animated_CE:
+			self.space3D.plot_config_space_and_tree()
+		else:
+			self.space3D.plot_config_space()
 
 
 	def start_path_robot(self,returned = False):
